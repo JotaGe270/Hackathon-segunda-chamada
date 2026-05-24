@@ -23,6 +23,7 @@ namespace Hackathon_segunda_chamada.Models
         [Required]
         public string Status { get; set; } = "Pendente"; // (sempre vai ser pendente quando for criado, até o Coordenador aprovar ou negar)
 
+        public string? MotivoRecusa { get; set; } // só vai ser preenchido se o coordenador negar o requerimento, para dar um feedback pro aluno
         public DateTime DataCriacao { get; set; } = DateTime.Now;
 
     }
