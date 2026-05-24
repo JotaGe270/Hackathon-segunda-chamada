@@ -1,0 +1,148 @@
+@model Hackathon_segunda_chamada.Models.ViewModels.LoginViewModel
+
+@{
+    ViewData["Title"] = "Login";
+    Layout = "_Layout";
+}
+
+<style>
+    :root {
+        --color-primary: #1A3A6B;
+        --color-primary-light: #2E5FA3;
+        --color-bg: #F4F6F9;
+        --color-surface: #FFFFFF;
+        --color-text-primary: #1C1C1E;
+        --color-text-secondary: #6B7280;
+        --color-border: #D1D5DB;
+    }
+
+    body {
+        background-color: var(--color-bg);
+    }
+
+    .login-wrapper {
+        min-height: 80vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .login-card {
+        width: 100%;
+        max-width: 420px;
+        background-color: var(--color-surface);
+        border: 1px solid var(--color-border);
+        border-radius: 0.75rem;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+        padding: 2.5rem 2rem;
+    }
+
+    .login-logo {
+        display: block;
+        margin: 0 auto 1rem;
+        max-width: 80px;
+        height: auto;
+    }
+
+    .login-title {
+        color: var(--color-text-primary);
+        font-weight: 700;
+        font-size: 1.4rem;
+        text-align: center;
+        margin-bottom: 1.75rem;
+    }
+
+    .btn-login {
+        background-color: var(--color-primary);
+        border-color: var(--color-primary);
+        color: #fff;
+        font-weight: 600;
+        width: 100%;
+        padding: 0.6rem;
+        border-radius: 0.5rem;
+        transition: background-color 0.2s ease;
+    }
+
+    .btn-login:hover,
+    .btn-login:focus {
+        background-color: var(--color-primary-light);
+        border-color: var(--color-primary-light);
+        color: #fff;
+    }
+
+    .form-label {
+        color: var(--color-text-secondary);
+        font-size: 0.875rem;
+        font-weight: 600;
+    }
+
+    .form-control {
+        border-color: var(--color-border);
+        border-radius: 0.5rem;
+    }
+
+    .form-control:focus {
+        border-color: var(--color-primary-light);
+        box-shadow: 0 0 0 0.2rem rgba(46, 95, 163, 0.2);
+    }
+</style>
+
+<div class="login-wrapper">
+    <div class="login-card">
+
+        <img src="~/images/logo.png"
+             alt="Segunda Chamada"
+             class="login-logo"
+             onerror="this.style.display='none'; document.getElementById('logo-placeholder').style.display='block';" />
+
+        <div id="logo-placeholder"
+             class="text-center mb-3"
+             style="display:none; font-size:0.85rem; color:var(--color-text-secondary); font-weight:600;">
+            Segunda Chamada
+        </div>
+
+        <h1 class="login-title">Segunda Chamada Acadêmica</h1>
+
+        @if (!ViewData.ModelState.IsValid)
+        {
+            <div class="alert alert-danger" role="alert">
+                @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                {
+                    <div>@error.ErrorMessage</div>
+                }
+            </div>
+        }
+
+        <form asp-controller="Account" asp-action="Login" method="post" asp-antiforgery="true">
+
+            <div class="mb-3">
+                <label asp-for="Matricula" class="form-label">Matrícula</label>
+                <input asp-for="Matricula"
+                       type="number"
+                       class="form-control"
+                       placeholder="Digite sua matrícula"
+                       autocomplete="username"
+                       required />
+                <span asp-validation-for="Matricula" class="text-danger small"></span>
+            </div>
+
+            <div class="mb-4">
+                <label asp-for="Senha" class="form-label">Senha</label>
+                <input asp-for="Senha"
+                       type="password"
+                       class="form-control"
+                       placeholder="Digite sua senha"
+                       autocomplete="current-password"
+                       required />
+                <span asp-validation-for="Senha" class="text-danger small"></span>
+            </div>
+
+            <button type="submit" class="btn btn-login">Entrar</button>
+
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+}

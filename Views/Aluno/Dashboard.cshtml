@@ -1,0 +1,188 @@
+@model Hackathon_segunda_chamada.DTOs.DadosAlunoDto
+
+@{
+    ViewData["Title"] = "Dashboard do Aluno";
+    Layout = "_Layout";
+}
+
+@await Html.PartialAsync("_NavbarAluno")
+
+<div class="container py-4">
+
+    @* Card de dados do aluno *@
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <h5 class="card-title fw-semibold mb-3">Meus Dados</h5>
+            <div class="row g-3">
+                <div class="col-sm-6 col-md-3">
+                    <span class="text-secondary small">Matrícula</span>
+                    <p class="mb-0 fw-semibold">@Model.Matricula</p>
+                </div>
+                <div class="col-sm-6 col-md-3">
+                    <span class="text-secondary small">Curso</span>
+                    <p class="mb-0 fw-semibold">@Model.Curso</p>
+                </div>
+                <div class="col-sm-6 col-md-3">
+                    <span class="text-secondary small">Período</span>
+                    <p class="mb-0 fw-semibold">@Model.Periodo</p>
+                </div>
+                <div class="col-sm-6 col-md-3">
+                    <span class="text-secondary small">Turno</span>
+                    <p class="mb-0 fw-semibold">@Model.Turno</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @* Seção de requerimentos *@
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="card-title fw-semibold mb-0">Meus Requerimentos</h5>
+                <button type="button"
+                        id="btn-nova-solicitacao"
+                        class="btn btn-primary"
+                        data-bs-toggle="modal"
+                        data-bs-target="#modal-solicitacao">
+                    ＋ Nova Solicitação
+                </button>
+            </div>
+
+            <div class="table-responsive">
+                <table id="tabela-requerimentos" class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th scope="col">Matéria</th>
+                            <th scope="col">Tipo de Atestado</th>
+                            <th scope="col">Status</th>
+                            <th scope="col">Data</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @* Preenchido via AJAX *@
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="msg-sem-requerimentos" class="d-none text-center text-secondary py-4">
+                <p class="mb-0">Nenhum requerimento cadastrado.</p>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+@* Modal de Solicitação de Segunda Chamada *@
+<div id="modal-solicitacao" class="modal fade" tabindex="-1" aria-labelledby="modal-solicitacao-label" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title fw-semibold" id="modal-solicitacao-label">Nova Solicitação de Segunda Chamada</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+
+            <div class="modal-body">
+                @Html.AntiForgeryToken()
+
+                <div class="mb-3">
+                    <label for="select-materia" class="form-label fw-semibold">Matéria <span class="text-danger">*</span></label>
+                    <select id="select-materia" class="form-select" required>
+                        <option value="" disabled selected>Carregando matérias...</option>
+                    </select>
+                    <div class="invalid-feedback">Selecione uma matéria.</div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="motivo" class="form-label fw-semibold">Motivo <span class="text-danger">*</span></label>
+                    <textarea id="motivo"
+                              class="form-control"
+                              rows="4"
+                              maxlength="500"
+                              placeholder="Descreva o motivo da ausência..."
+                              required></textarea>
+                    <div class="d-flex justify-content-between mt-1">
+                        <div class="invalid-feedback d-block" id="feedback-motivo" style="visibility: hidden;">
+                            O campo motivo é obrigatório.
+                        </div>
+                        <small class="text-secondary ms-auto">
+                            <span id="contador-motivo">0</span>/500
+                        </small>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Tipo de Atestado <span class="text-danger">*</span></label>
+                    <div class="d-flex flex-wrap gap-3">
+                        <div class="form-check">
+                            <input class="form-check-input"
+                                   type="radio"
+                                   name="tipoAtestado"
+                                   id="tipo-medico"
+                                   value="medico"
+                                   required>
+                            <label class="form-check-label" for="tipo-medico">Médico</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input"
+                                   type="radio"
+                                   name="tipoAtestado"
+                                   id="tipo-trabalho"
+                                   value="trabalho">
+                            <label class="form-check-label" for="tipo-trabalho">Trabalho</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input"
+                                   type="radio"
+                                   name="tipoAtestado"
+                                   id="tipo-obito"
+                                   value="obito">
+                            <label class="form-check-label" for="tipo-obito">Óbito</label>
+                        </div>
+                    </div>
+                    <div class="invalid-feedback d-block" id="feedback-tipo-atestado" style="visibility: hidden;">
+                        Selecione o tipo de atestado.
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="arquivo" class="form-label fw-semibold">Atestado <span class="text-danger">*</span></label>
+                    <input id="arquivo"
+                           type="file"
+                           class="form-control"
+                           accept=".pdf,.jpg,.jpeg,.png"
+                           required>
+                    <div class="form-text text-secondary">Formatos aceitos: PDF, JPG, JPEG, PNG. Tamanho máximo: 10 MB.</div>
+                    <div class="invalid-feedback">Anexe o atestado comprobatório.</div>
+                </div>
+
+                <div id="preview-arquivo" class="mb-3 d-none">
+                    @* Ícone PDF ou thumbnail de imagem exibido via JS *@
+                </div>
+
+                <div id="alerta-resultado" class="alert d-none" role="alert"></div>
+
+            </div>
+
+            <div class="modal-footer d-flex align-items-center gap-2">
+                <div class="spinner-border spinner-border-sm text-primary d-none me-auto" id="spinner-envio" role="status" aria-hidden="true"></div>
+
+                <button type="button"
+                        class="btn btn-secondary"
+                        data-bs-dismiss="modal">
+                    Cancelar
+                </button>
+                <button type="button"
+                        id="btn-enviar"
+                        class="btn btn-primary">
+                    Enviar
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/aluno-dashboard.js" asp-append-version="true"></script>
+}

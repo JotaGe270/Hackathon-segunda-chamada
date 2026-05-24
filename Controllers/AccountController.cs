@@ -57,13 +57,15 @@ namespace Hackathon_segunda_chamada.Controllers
             // Efetua o login e gera o cookie no navegador
             await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
 
-            // Se for Coordenador = tela dele
-            if (usuario.Perfil == PerfilUsuario.Coordenador)
-            {; 
-            }
-
-            // Para os outros, manda pra tela inicial padrão
-            return RedirectToAction("Index", "Home");
+            // Redireciona para o dashboard correto por perfil
+            return usuario.Perfil switch
+            {
+                PerfilUsuario.AlunoEng or PerfilUsuario.AlunoSI
+                    => RedirectToAction("Dashboard", "Aluno"),
+                PerfilUsuario.Coordenador
+                    => RedirectToAction("Painel", "Coordenador"),
+                _ => RedirectToAction("Index", "Home")
+            };
         }
 
         // Faz o Logout e destrói o cookie
