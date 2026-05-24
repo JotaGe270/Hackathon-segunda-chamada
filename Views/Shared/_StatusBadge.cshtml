@@ -1,0 +1,15 @@
+@model string
+
+@{
+    var status = Model ?? ViewData["status"]?.ToString() ?? string.Empty;
+
+    var classe = status switch
+    {
+        "Pendente" => "warning",
+        "Aprovado" => "success",
+        "Negado"   => "danger",
+        _          => "secondary"
+    };
+}
+
+<span class="badge bg-@classe">@status</span>

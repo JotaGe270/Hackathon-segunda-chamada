@@ -16,7 +16,10 @@ namespace Hackathon_segunda_chamada.Models
         public String NomeMateria { get; set; }
 
         [Required]
-        public string TipoAtestado { get; set; } // medico, trabalho e obto 
+        public string Motivo { get; set; } // motivo da ausência informado pelo aluno
+
+        [Required]
+        public string TipoAtestado { get; set; } // medico, trabalho e obito
 
         [Required]
         public string URLAtestado { get; set; }
