@@ -1,0 +1,33 @@
+@using System.Security.Claims
+
+@{
+    var matricula = User.FindFirstValue(ClaimTypes.Name) ?? "";
+}
+
+<nav class="navbar navbar-expand-sm" style="background-color: #1A3A6B;">
+    <div class="container-fluid">
+        <a class="navbar-brand text-white fw-bold" href="#">Segunda Chamada</a>
+
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarAluno"
+                aria-controls="navbarAluno" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarAluno">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item">
+                    <a class="nav-link text-white" asp-controller="Aluno" asp-action="Dashboard">Dashboard</a>
+                </li>
+            </ul>
+
+            <div class="d-flex align-items-center gap-3">
+                <span class="text-white small">Matrícula: <strong>@matricula</strong></span>
+
+                <form asp-controller="Account" asp-action="Logout" method="post" class="m-0">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-sm btn-outline-light">Sair</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</nav>

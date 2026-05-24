@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Hackathon_segunda_chamada.Data;
+using Hackathon_segunda_chamada.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
 
 
@@ -17,6 +18,11 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.LogoutPath = "/Account/Logout";
         options.AccessDeniedPath = "/Account/AccessDenied";
     });
+
+// Registro dos serviços da aplicação
+builder.Services.AddScoped<IAlunoService, AlunoService>();
+builder.Services.AddScoped<IRequerimentoService, RequerimentoService>();
+builder.Services.AddScoped<IArquivoService, ArquivoService>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
