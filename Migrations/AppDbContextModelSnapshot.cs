@@ -36,6 +36,10 @@ namespace Hackathon_segunda_chamada.Migrations
                     b.Property<int>("MatriculaAluno")
                         .HasColumnType("int");
 
+                    b.Property<string>("Motivo")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("MotivoRecusa")
                         .HasColumnType("nvarchar(max)");
 

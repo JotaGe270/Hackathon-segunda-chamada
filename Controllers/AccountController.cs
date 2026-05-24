@@ -20,10 +20,10 @@ namespace Hackathon_segunda_chamada.Controllers
         [HttpGet]
         public IActionResult Login()
         {
-            // Se o cara já estiver logado e tentar acessar a tela de login, manda pra home
-            if (User.Identity.IsAuthenticated)
+            // Se já estiver logado, redireciona para o dashboard correto
+            if (User.Identity?.IsAuthenticated == true)
             {
-                return RedirectToAction("Index", "Home");
+                return RedirecionarPorPerfil();
             }
             return View();
         }
@@ -58,14 +58,7 @@ namespace Hackathon_segunda_chamada.Controllers
             await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
 
             // Redireciona para o dashboard correto por perfil
-            return usuario.Perfil switch
-            {
-                PerfilUsuario.AlunoEng or PerfilUsuario.AlunoSI
-                    => RedirectToAction("Dashboard", "Aluno"),
-                PerfilUsuario.Coordenador
-                    => RedirectToAction("Painel", "Coordenador"),
-                _ => RedirectToAction("Index", "Home")
-            };
+            return RedirecionarPorPerfil(usuario.Perfil);
         }
 
         // Faz o Logout e destrói o cookie
@@ -79,6 +72,25 @@ namespace Hackathon_segunda_chamada.Controllers
         public IActionResult AccessDenied()
         {
             return View();
+        }
+
+        private IActionResult RedirecionarPorPerfil(PerfilUsuario? perfil = null)
+        {
+            // Se perfil não foi passado, lê do claim atual
+            if (perfil == null && Enum.TryParse<PerfilUsuario>(
+                User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value, out var p))
+            {
+                perfil = p;
+            }
+
+            return perfil switch
+            {
+                PerfilUsuario.AlunoEng or PerfilUsuario.AlunoSI
+                    => RedirectToAction("Dashboard", "Aluno"),
+                PerfilUsuario.Coordenador
+                    => RedirectToAction("Painel", "Coordenador"),
+                _ => View("Login")
+            };
         }
     }
 }
