@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 using Hackathon_segunda_chamada.Data;
+using Hackathon_segunda_chamada.DTOs;
 using Hackathon_segunda_chamada.Models;
 
 namespace Hackathon_segunda_chamada.Controllers
@@ -63,6 +65,53 @@ namespace Hackathon_segunda_chamada.Controllers
             }
 
             return RedirectToAction("Painel");
+        }
+
+        // Perfil do Coordenador
+        public async Task<IActionResult> Perfil()
+        {
+            var matriculaLogada = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name)?.Value;
+            if (matriculaLogada == null || !int.TryParse(matriculaLogada, out var matricula))
+                return RedirectToAction("Login", "Account");
+
+            var usuario = await _context.Usuarios.FirstOrDefaultAsync(u => u.Matricula == matricula);
+            if (usuario == null)
+                return RedirectToAction("Login", "Account");
+
+            // Estatísticas dos requerimentos
+            var totalPendentes = await _context.RequerimentosSegundaChamada
+                .CountAsync(r => r.Status == "Pendente");
+
+            var totalAprovados = await _context.RequerimentosSegundaChamada
+                .CountAsync(r => r.Status == "Aprovado");
+
+            var totalNegados = await _context.RequerimentosSegundaChamada
+                .CountAsync(r => r.Status == "Negado");
+
+            // Requerimentos recentes (últimos 5)
+            var requerimentosRecentes = await _context.RequerimentosSegundaChamada
+                .OrderByDescending(r => r.DataCriacao)
+                .Take(5)
+                .Select(r => new RequerimentoResumoDto(
+                    r.Id,
+                    r.NomeMateria,
+                    r.TipoAtestado,
+                    r.Status,
+                    r.DataCriacao
+                ))
+                .ToListAsync();
+
+            var perfil = new PerfilCoordenadorDto(
+                usuario.Matricula,
+                $"Coordenador #{usuario.Matricula}",
+                "Coordenação Acadêmica",
+                totalPendentes,
+                totalAprovados,
+                totalNegados,
+                requerimentosRecentes
+            );
+
+            return View(perfil);
         }
     }
 }

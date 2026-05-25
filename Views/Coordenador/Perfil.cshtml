@@ -1,0 +1,264 @@
+@model Hackathon_segunda_chamada.DTOs.PerfilCoordenadorDto
+
+@{
+    ViewData["Title"] = "Meu Perfil - Coordenador";
+    Layout = "_Layout";
+}
+
+@await Html.PartialAsync("_NavbarCoordenador")
+
+<div class="container py-4">
+
+    @* Card de dados do coordenador *@
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <h5 class="card-title fw-semibold mb-3">Dados do Coordenador</h5>
+                    <div class="row g-3">
+                        <div class="col-sm-6 col-md-3">
+                            <span class="text-secondary small">Matrícula</span>
+                            <p class="mb-0 fw-semibold">@Model.Matricula</p>
+                        </div>
+                        <div class="col-sm-6 col-md-3">
+                            <span class="text-secondary small">Nome</span>
+                            <p class="mb-0 fw-semibold">@Model.NomeCompleto</p>
+                        </div>
+                        <div class="col-sm-6 col-md-3">
+                            <span class="text-secondary small">Departamento</span>
+                            <p class="mb-0 fw-semibold">@Model.Departamento</p>
+                        </div>
+                        <div class="col-sm-6 col-md-3">
+                            <span class="text-secondary small">Cargo</span>
+                            <p class="mb-0 fw-semibold">Coordenador Acadêmico</p>
+                        </div>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-sm btn-outline-primary">
+                    <i class="bi bi-pencil"></i> Editar Perfil
+                </button>
+            </div>
+        </div>
+    </div>
+
+    @* Seção de Estatísticas *@
+    <div class="row g-3 mb-4">
+        <div class="col-md-6 col-lg-3">
+            <div class="card shadow-sm h-100 border-left-warning">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="text-secondary small fw-semibold d-block mb-2">PENDENTES</span>
+                            <h3 class="mb-0 fw-bold" style="color: #FFC107;">@Model.TotalRequerimentosPendentes</h3>
+                        </div>
+                        <div style="font-size: 2.5rem; color: #FFC107; opacity: 0.3;">
+                            ⏳
+                        </div>
+                    </div>
+                    <a href="@Url.Action("Painel", "Coordenador")" class="small text-decoration-none mt-2 d-inline-block">Ver todos →</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-3">
+            <div class="card shadow-sm h-100 border-left-success">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="text-secondary small fw-semibold d-block mb-2">APROVADOS</span>
+                            <h3 class="mb-0 fw-bold" style="color: #28A745;">@Model.TotalRequerimentosAprovados</h3>
+                        </div>
+                        <div style="font-size: 2.5rem; color: #28A745; opacity: 0.3;">
+                            ✓
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-3">
+            <div class="card shadow-sm h-100 border-left-danger">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="text-secondary small fw-semibold d-block mb-2">NEGADOS</span>
+                            <h3 class="mb-0 fw-bold" style="color: #DC3545;">@Model.TotalRequerimentosNegados</h3>
+                        </div>
+                        <div style="font-size: 2.5rem; color: #DC3545; opacity: 0.3;">
+                            ✕
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-3">
+            <div class="card shadow-sm h-100 border-left-info">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="text-secondary small fw-semibold d-block mb-2">TOTAL</span>
+                            <h3 class="mb-0 fw-bold" style="color: #17A2B8;">@(Model.TotalRequerimentosPendentes + Model.TotalRequerimentosAprovados + Model.TotalRequerimentosNegados)</h3>
+                        </div>
+                        <div style="font-size: 2.5rem; color: #17A2B8; opacity: 0.3;">
+                            📋
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @* Seção de Requerimentos Recentes *@
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="card-title fw-semibold mb-0">Requerimentos Recentes</h5>
+                <a href="@Url.Action("Painel", "Coordenador")" class="btn btn-sm btn-outline-primary">Ver Todos</a>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th scope="col">ID</th>
+                            <th scope="col">Matéria</th>
+                            <th scope="col">Tipo de Atestado</th>
+                            <th scope="col">Status</th>
+                            <th scope="col">Data</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.RequerimentosRecentes != null && Model.RequerimentosRecentes.Count > 0)
+                        {
+                            @foreach (var req in Model.RequerimentosRecentes)
+                            {
+                                <tr>
+                                    <td>
+                                        <span class="badge bg-light text-dark">#@req.Id</span>
+                                    </td>
+                                    <td>@req.NomeMateria</td>
+                                    <td>
+                                        <span class="badge bg-info">@req.TipoAtestado</span>
+                                    </td>
+                                    <td>
+                                        @if (req.Status == "Pendente")
+                                        {
+                                            <span class="badge bg-warning text-dark">⏳ Pendente</span>
+                                        }
+                                        else if (req.Status == "Aprovado")
+                                        {
+                                            <span class="badge bg-success">✓ Aprovado</span>
+                                        }
+                                        else if (req.Status == "Negado")
+                                        {
+                                            <span class="badge bg-danger">✕ Negado</span>
+                                        }
+                                    </td>
+                                    <td>@req.DataCriacao.ToString("dd/MM/yyyy HH:mm")</td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="5" class="text-center text-secondary py-4">
+                                    Nenhum requerimento cadastrado.
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    @* Seção de Ações Rápidas *@
+    <div class="card shadow-sm mt-4">
+        <div class="card-body">
+            <h5 class="card-title fw-semibold mb-3">Ações Rápidas</h5>
+            <div class="row g-2">
+                <div class="col-md-6 col-lg-3">
+                    <a href="@Url.Action("Painel", "Coordenador")" class="btn btn-outline-primary w-100">
+                        <i class="bi bi-list-check"></i> Gerenciar Requerimentos
+                    </a>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <a href="@Url.Action("Novo", "RequerimentoSegundaChamada")" class="btn btn-outline-primary w-100">
+                        <i class="bi bi-plus-circle"></i> Novo Requerimento
+                    </a>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <button type="button" class="btn btn-outline-info w-100" data-bs-toggle="modal" data-bs-target="#modal-relatorio">
+                        <i class="bi bi-graph-up"></i> Relatório
+                    </button>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <button type="button" class="btn btn-outline-secondary w-100">
+                        <i class="bi bi-question-circle"></i> Ajuda
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+@* Modal de Relatório *@
+<div id="modal-relatorio" class="modal fade" tabindex="-1" aria-labelledby="modal-relatorio-label" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title fw-semibold" id="modal-relatorio-label">Relatório de Requerimentos</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+
+            <div class="modal-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Data Inicial</label>
+                        <input type="date" class="form-control" id="data-inicial">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Data Final</label>
+                        <input type="date" class="form-control" id="data-final">
+                    </div>
+                    <div class="col-md-12">
+                        <label class="form-label fw-semibold">Filtrar por Status</label>
+                        <select class="form-select" id="status-filtro">
+                            <option value="">Todos</option>
+                            <option value="Pendente">Pendente</option>
+                            <option value="Aprovado">Aprovado</option>
+                            <option value="Negado">Negado</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary">Gerar Relatório</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<style>
+    .border-left-warning {
+        border-left: 4px solid #FFC107 !important;
+    }
+
+    .border-left-success {
+        border-left: 4px solid #28A745 !important;
+    }
+
+    .border-left-danger {
+        border-left: 4px solid #DC3545 !important;
+    }
+
+    .border-left-info {
+        border-left: 4px solid #17A2B8 !important;
+    }
+</style>

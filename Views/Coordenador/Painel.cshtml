@@ -1,0 +1,409 @@
+@model IEnumerable<Hackathon_segunda_chamada.Models.RequerimentoSegundaChamada>
+
+@{
+    ViewData["Title"] = "Painel de Coordenação";
+    Layout = "_Layout";
+}
+
+@await Html.PartialAsync("_NavbarCoordenador")
+
+<div class="container-fluid py-4">
+
+    @* Mensagens de Feedback *@
+    @if (TempData["MensagemSucesso"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <strong>Sucesso!</strong> @TempData["MensagemSucesso"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
+    }
+
+    @if (TempData["MensagemErro"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <strong>Erro!</strong> @TempData["MensagemErro"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
+    }
+
+    @* Cabeçalho *@
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold mb-0">Painel de Requerimentos de Segunda Chamada</h2>
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal-novo-requerimento">
+            ＋ Novo Requerimento
+        </button>
+    </div>
+
+    @* Filtros *@
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <form method="get" action="@Url.Action("Painel", "Coordenador")" class="row g-3 align-items-end">
+                <div class="col-md-3">
+                    <label for="filtro-status" class="form-label fw-semibold small">Status</label>
+                    <select id="filtro-status" name="status" class="form-select form-select-sm">
+                        <option value="">Todos</option>
+                        <option value="Pendente">Pendente</option>
+                        <option value="Aprovado">Aprovado</option>
+                        <option value="Negado">Negado</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="filtro-materia" class="form-label fw-semibold small">Matéria</label>
+                    <input type="text" id="filtro-materia" name="materia" class="form-control form-control-sm" placeholder="Buscar matéria...">
+                </div>
+                <div class="col-md-3">
+                    <label for="filtro-periodo" class="form-label fw-semibold small">Período</label>
+                    <input type="date" id="filtro-periodo" name="periodo" class="form-control form-control-sm">
+                </div>
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-sm btn-outline-primary w-100">
+                        <i class="bi bi-search"></i> Filtrar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    @* Tabela de Requerimentos *@
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th scope="col">ID</th>
+                            <th scope="col">Matrícula</th>
+                            <th scope="col">Matéria</th>
+                            <th scope="col">Atestado</th>
+                            <th scope="col">Status</th>
+                            <th scope="col">Data</th>
+                            <th scope="col">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model != null && Model.Any())
+                        {
+                            @foreach (var req in Model)
+                            {
+                                <tr>
+                                    <td>
+                                        <span class="badge bg-light text-dark">#@req.Id</span>
+                                    </td>
+                                    <td>
+                                        <span class="fw-semibold">@req.MatriculaAluno</span>
+                                    </td>
+                                    <td>@req.NomeMateria</td>
+                                    <td>
+                                        <span class="badge bg-info text-white">@req.TipoAtestado</span>
+                                    </td>
+                                    <td>
+                                        @if (req.Status == "Pendente")
+                                        {
+                                            <span class="badge bg-warning text-dark">⏳ Pendente</span>
+                                        }
+                                        else if (req.Status == "Aprovado")
+                                        {
+                                            <span class="badge bg-success">✓ Aprovado</span>
+                                        }
+                                        else if (req.Status == "Negado")
+                                        {
+                                            <span class="badge bg-danger">✕ Negado</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">@req.DataCriacao.ToString("dd/MM/yyyy HH:mm")</small>
+                                    </td>
+                                    <td>
+                                        <button type="button" 
+                                                class="btn btn-sm btn-outline-secondary"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#modal-detalhes-@req.Id"
+                                                title="Ver Detalhes">
+                                            👁️ Ver
+                                        </button>
+                                        @if (req.Status == "Pendente")
+                                        {
+                                            <button type="button"
+                                                    class="btn btn-sm btn-outline-success"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#modal-aprovar-@req.Id"
+                                                    title="Aprovar">
+                                                ✓ Aprovar
+                                            </button>
+                                            <button type="button"
+                                                    class="btn btn-sm btn-outline-danger"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#modal-negar-@req.Id"
+                                                    title="Negar">
+                                                ✕ Negar
+                                            </button>
+                                        }
+                                    </td>
+                                </tr>
+
+                                @* Modal de Detalhes *@
+                                <div id="modal-detalhes-@req.Id" class="modal fade" tabindex="-1" aria-hidden="true">
+                                    <div class="modal-dialog modal-lg modal-dialog-centered">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title fw-semibold">Detalhes do Requerimento #@req.Id</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <div class="row g-3 mb-3">
+                                                    <div class="col-md-6">
+                                                        <span class="text-secondary small fw-semibold">Matrícula do Aluno</span>
+                                                        <p class="mb-0 fw-semibold">@req.MatriculaAluno</p>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <span class="text-secondary small fw-semibold">Matéria</span>
+                                                        <p class="mb-0 fw-semibold">@req.NomeMateria</p>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <span class="text-secondary small fw-semibold">Tipo de Atestado</span>
+                                                        <p class="mb-0 fw-semibold">@req.TipoAtestado</p>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <span class="text-secondary small fw-semibold">Status</span>
+                                                        <p class="mb-0 fw-semibold">@req.Status</p>
+                                                    </div>
+                                                    <div class="col-md-12">
+                                                        <span class="text-secondary small fw-semibold">Motivo da Ausência</span>
+                                                        <p class="mb-0">@req.Motivo</p>
+                                                    </div>
+                                                    @if (!string.IsNullOrEmpty(req.MotivoRecusa))
+                                                    {
+                                                        <div class="col-md-12">
+                                                            <div class="alert alert-danger mb-0">
+                                                                <span class="text-secondary small fw-semibold d-block mb-2">Motivo da Recusa</span>
+                                                                @req.MotivoRecusa
+                                                            </div>
+                                                        </div>
+                                                    }
+                                                    <div class="col-md-12">
+                                                        <span class="text-secondary small fw-semibold">Atestado</span>
+                                                        <div>
+                                                            @if (!string.IsNullOrEmpty(req.URLAtestado))
+                                                            {
+                                                                <a href="@req.URLAtestado" target="_blank" class="btn btn-sm btn-outline-primary">
+                                                                    📎 Visualizar Documento
+                                                                </a>
+                                                            }
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-12">
+                                                        <span class="text-secondary small fw-semibold">Data de Criação</span>
+                                                        <p class="mb-0">@req.DataCriacao.ToString("dd/MM/yyyy HH:mm:ss")</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                @* Modal de Aprovação *@
+                                <div id="modal-aprovar-@req.Id" class="modal fade" tabindex="-1" aria-hidden="true">
+                                    <div class="modal-dialog modal-dialog-centered">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title fw-semibold">Aprovar Requerimento</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <p>Tem certeza que deseja <strong>aprovar</strong> este requerimento?</p>
+                                                <div class="alert alert-info">
+                                                    <strong>Requerimento #@req.Id</strong><br>
+                                                    Aluno: @req.MatriculaAluno<br>
+                                                    Matéria: @req.NomeMateria
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                                <form method="post" action="@Url.Action("Aprovar", "Coordenador")" style="display:inline;">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="id" value="@req.Id">
+                                                    <button type="submit" class="btn btn-success">✓ Aprovar</button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                @* Modal de Negação *@
+                                <div id="modal-negar-@req.Id" class="modal fade" tabindex="-1" aria-hidden="true">
+                                    <div class="modal-dialog modal-dialog-centered">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title fw-semibold">Negar Requerimento</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                                            </div>
+                                            <form method="post" action="@Url.Action("Negar", "Coordenador")">
+                                                @Html.AntiForgeryToken()
+                                                <div class="modal-body">
+                                                    <div class="alert alert-danger mb-3">
+                                                        <strong>Requerimento #@req.Id</strong><br>
+                                                        Aluno: @req.MatriculaAluno<br>
+                                                        Matéria: @req.NomeMateria
+                                                    </div>
+                                                    <div>
+                                                        <label for="motivo-@req.Id" class="form-label fw-semibold">
+                                                            Motivo da Recusa <span class="text-danger">*</span>
+                                                        </label>
+                                                        <textarea id="motivo-@req.Id" 
+                                                                  name="motivo" 
+                                                                  class="form-control" 
+                                                                  rows="4" 
+                                                                  placeholder="Explique o motivo da recusa..."
+                                                                  required></textarea>
+                                                        <small class="text-muted">Campo obrigatório</small>
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                                    <input type="hidden" name="id" value="@req.Id">
+                                                    <button type="submit" class="btn btn-danger">✕ Negar</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="7" class="text-center text-secondary py-4">
+                                    Nenhum requerimento cadastrado no sistema.
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+@* Modal de Novo Requerimento (para coordenador criar manualmente) *@
+<div id="modal-novo-requerimento" class="modal fade" tabindex="-1" aria-labelledby="modal-novo-requerimento-label" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title fw-semibold" id="modal-novo-requerimento-label">Novo Requerimento de Segunda Chamada</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+
+            <form method="post" action="@Url.Action("Novo", "RequerimentoSegundaChamada")">
+                @Html.AntiForgeryToken()
+
+                <div class="modal-body">
+
+                    <div class="mb-3">
+                        <label for="matricula-aluno" class="form-label fw-semibold">Matrícula do Aluno <span class="text-danger">*</span></label>
+                        <input type="number" 
+                               id="matricula-aluno" 
+                               name="matriculaAluno"
+                               class="form-control" 
+                               placeholder="Digite a matrícula do aluno"
+                               required>
+                        <small class="text-muted">A matrícula será usada para carregar as matérias do aluno</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="select-materia" class="form-label fw-semibold">Matéria <span class="text-danger">*</span></label>
+                        <select id="select-materia" 
+                                name="nomeMateria"
+                                class="form-select" 
+                                required
+                                disabled>
+                            <option value="" disabled selected>Carregando matérias...</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="motivo" class="form-label fw-semibold">Motivo da Ausência <span class="text-danger">*</span></label>
+                        <textarea id="motivo" 
+                                  name="motivo" 
+                                  class="form-control" 
+                                  rows="3" 
+                                  placeholder="Descreva o motivo da ausência"
+                                  required></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="tipo-atestado" class="form-label fw-semibold">Tipo de Atestado <span class="text-danger">*</span></label>
+                        <select id="tipo-atestado" 
+                                name="tipoAtestado" 
+                                class="form-select" 
+                                required>
+                            <option value="" disabled selected>Selecione...</option>
+                            <option value="Médico">Médico</option>
+                            <option value="Trabalho">Trabalho</option>
+                            <option value="Óbito">Óbito</option>
+                            <option value="Outro">Outro</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="url-atestado" class="form-label fw-semibold">URL do Atestado <span class="text-danger">*</span></label>
+                        <input type="url" 
+                               id="url-atestado" 
+                               name="urlAtestado" 
+                               class="form-control" 
+                               placeholder="https://exemplo.com/atestado"
+                               required>
+                    </div>
+
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Cadastrar Requerimento</button>
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Carregar matérias quando a matrícula mudar
+        document.getElementById('matricula-aluno').addEventListener('change', async function () {
+            const matricula = this.value;
+            const selectMateria = document.getElementById('select-materia');
+
+            if (!matricula) {
+                selectMateria.disabled = true;
+                selectMateria.innerHTML = '<option value="" disabled selected>Carregando matérias...</option>';
+                return;
+            }
+
+            try {
+                const response = await fetch(`@Url.Action("BuscarMateriasPorMatricula", "RequerimentoSegundaChamada")?matricula=${matricula}`);
+                const data = await response.json();
+
+                selectMateria.innerHTML = '<option value="" disabled selected>Selecione uma matéria</option>';
+
+                if (data.sucesso && data.dados.length > 0) {
+                    data.dados.forEach(materia => {
+                        const option = document.createElement('option');
+                        option.value = materia;
+                        option.textContent = materia;
+                        selectMateria.appendChild(option);
+                    });
+                    selectMateria.disabled = false;
+                } else {
+                    selectMateria.innerHTML = '<option value="" disabled selected>Nenhuma matéria encontrada</option>';
+                    selectMateria.disabled = true;
+                }
+            } catch (error) {
+                console.error('Erro ao buscar matérias:', error);
+                selectMateria.innerHTML = '<option value="" disabled selected>Erro ao carregar matérias</option>';
+            }
+        });
+    </script>
+}
