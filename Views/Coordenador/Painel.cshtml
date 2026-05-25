@@ -3,6 +3,7 @@
 @{
     ViewData["Title"] = "Painel de Coordenação";
     Layout = "_Layout";
+    var statusAtual = Context.Request.Query["status"].ToString();
 }
 
 @await Html.PartialAsync("_NavbarCoordenador")
@@ -17,7 +18,6 @@
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
         </div>
     }
-
     @if (TempData["MensagemErro"] != null)
     {
         <div class="alert alert-danger alert-dismissible fade show" role="alert">
@@ -34,32 +34,28 @@
         </button>
     </div>
 
-    @* Filtros *@
+    @* Filtro por Status *@
     <div class="card shadow-sm mb-4">
         <div class="card-body">
             <form method="get" action="@Url.Action("Painel", "Coordenador")" class="row g-3 align-items-end">
-                <div class="col-md-3">
-                    <label for="filtro-status" class="form-label fw-semibold small">Status</label>
+                <div class="col-md-4">
+                    <label for="filtro-status" class="form-label fw-semibold small">Filtrar por Status</label>
                     <select id="filtro-status" name="status" class="form-select form-select-sm">
-                        <option value="">Todos</option>
-                        <option value="Pendente">Pendente</option>
-                        <option value="Aprovado">Aprovado</option>
-                        <option value="Negado">Negado</option>
+                        <option value="" selected="@(statusAtual == "" ? "selected" : null)">Todos</option>
+                        <option value="Pendente" selected="@(statusAtual == "Pendente" ? "selected" : null)">⏳ Pendente</option>
+                        <option value="Aprovado" selected="@(statusAtual == "Aprovado" ? "selected" : null)">✓ Aprovado</option>
+                        <option value="Negado" selected="@(statusAtual == "Negado" ? "selected" : null)">✕ Negado</option>
                     </select>
                 </div>
-                <div class="col-md-3">
-                    <label for="filtro-materia" class="form-label fw-semibold small">Matéria</label>
-                    <input type="text" id="filtro-materia" name="materia" class="form-control form-control-sm" placeholder="Buscar matéria...">
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-sm btn-primary w-100">Filtrar</button>
                 </div>
-                <div class="col-md-3">
-                    <label for="filtro-periodo" class="form-label fw-semibold small">Período</label>
-                    <input type="date" id="filtro-periodo" name="periodo" class="form-control form-control-sm">
-                </div>
-                <div class="col-md-3">
-                    <button type="submit" class="btn btn-sm btn-outline-primary w-100">
-                        <i class="bi bi-search"></i> Filtrar
-                    </button>
-                </div>
+                @if (!string.IsNullOrEmpty(statusAtual))
+                {
+                    <div class="col-md-2">
+                        <a href="@Url.Action("Painel", "Coordenador")" class="btn btn-sm btn-outline-secondary w-100">Limpar</a>
+                    </div>
+                }
             </form>
         </div>
     </div>
@@ -71,7 +67,6 @@
                 <table class="table table-hover align-middle mb-0">
                     <thead class="table-light">
                         <tr>
-                            <th scope="col">ID</th>
                             <th scope="col">Matrícula</th>
                             <th scope="col">Matéria</th>
                             <th scope="col">Atestado</th>
@@ -86,16 +81,9 @@
                             @foreach (var req in Model)
                             {
                                 <tr>
-                                    <td>
-                                        <span class="badge bg-light text-dark">#@req.Id</span>
-                                    </td>
-                                    <td>
-                                        <span class="fw-semibold">@req.MatriculaAluno</span>
-                                    </td>
+                                    <td><span class="fw-semibold">@req.MatriculaAluno</span></td>
                                     <td>@req.NomeMateria</td>
-                                    <td>
-                                        <span class="badge bg-info text-white">@req.TipoAtestado</span>
-                                    </td>
+                                    <td><span class="badge bg-info text-white">@req.TipoAtestado</span></td>
                                     <td>
                                         @if (req.Status == "Pendente")
                                         {
@@ -110,11 +98,9 @@
                                             <span class="badge bg-danger">✕ Negado</span>
                                         }
                                     </td>
+                                    <td><small class="text-muted">@req.DataCriacao.ToString("dd/MM/yyyy HH:mm")</small></td>
                                     <td>
-                                        <small class="text-muted">@req.DataCriacao.ToString("dd/MM/yyyy HH:mm")</small>
-                                    </td>
-                                    <td>
-                                        <button type="button" 
+                                        <button type="button"
                                                 class="btn btn-sm btn-outline-secondary"
                                                 data-bs-toggle="modal"
                                                 data-bs-target="#modal-detalhes-@req.Id"
@@ -150,7 +136,7 @@
                                                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
                                             </div>
                                             <div class="modal-body">
-                                                <div class="row g-3 mb-3">
+                                                <div class="row g-3">
                                                     <div class="col-md-6">
                                                         <span class="text-secondary small fw-semibold">Matrícula do Aluno</span>
                                                         <p class="mb-0 fw-semibold">@req.MatriculaAluno</p>
@@ -175,19 +161,23 @@
                                                     {
                                                         <div class="col-md-12">
                                                             <div class="alert alert-danger mb-0">
-                                                                <span class="text-secondary small fw-semibold d-block mb-2">Motivo da Recusa</span>
+                                                                <span class="fw-semibold d-block mb-1">Motivo da Recusa</span>
                                                                 @req.MotivoRecusa
                                                             </div>
                                                         </div>
                                                     }
                                                     <div class="col-md-12">
                                                         <span class="text-secondary small fw-semibold">Atestado</span>
-                                                        <div>
+                                                        <div class="mt-1">
                                                             @if (!string.IsNullOrEmpty(req.URLAtestado))
                                                             {
-                                                                <a href="@req.URLAtestado" target="_blank" class="btn btn-sm btn-outline-primary">
+                                                                <button type="button"
+                                                                        class="btn btn-sm btn-outline-primary"
+                                                                        data-bs-dismiss="modal"
+                                                                        data-bs-toggle="modal"
+                                                                        data-bs-target="#modal-atestado-@req.Id">
                                                                     📎 Visualizar Documento
-                                                                </a>
+                                                                </button>
                                                             }
                                                         </div>
                                                     </div>
@@ -249,10 +239,10 @@
                                                         <label for="motivo-@req.Id" class="form-label fw-semibold">
                                                             Motivo da Recusa <span class="text-danger">*</span>
                                                         </label>
-                                                        <textarea id="motivo-@req.Id" 
-                                                                  name="motivo" 
-                                                                  class="form-control" 
-                                                                  rows="4" 
+                                                        <textarea id="motivo-@req.Id"
+                                                                  name="motivo"
+                                                                  class="form-control"
+                                                                  rows="4"
                                                                   placeholder="Explique o motivo da recusa..."
                                                                   required></textarea>
                                                         <small class="text-muted">Campo obrigatório</small>
@@ -267,13 +257,64 @@
                                         </div>
                                     </div>
                                 </div>
+
+                                @* Modal de Visualização do Atestado *@
+                                @if (!string.IsNullOrEmpty(req.URLAtestado))
+                                {
+                                    var extensao = System.IO.Path.GetExtension(req.URLAtestado).ToLowerInvariant();
+                                    <div id="modal-atestado-@req.Id" class="modal fade" tabindex="-1" aria-hidden="true">
+                                        <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title fw-semibold">Atestado — Requerimento #@req.Id</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                                                </div>
+                                                <div class="modal-body p-0" style="min-height: 70vh;">
+                                                    @if (extensao == ".pdf")
+                                                    {
+                                                        <iframe src="@req.URLAtestado"
+                                                                style="width:100%; height:75vh; border:none;"
+                                                                title="Atestado PDF"></iframe>
+                                                    }
+                                                    else if (extensao == ".jpg" || extensao == ".jpeg" || extensao == ".png")
+                                                    {
+                                                        <div class="d-flex justify-content-center align-items-center p-3" style="min-height:70vh;">
+                                                            <img src="@req.URLAtestado"
+                                                                 alt="Atestado"
+                                                                 class="img-fluid rounded"
+                                                                 style="max-height: 75vh; object-fit: contain;" />
+                                                        </div>
+                                                    }
+                                                    else
+                                                    {
+                                                        <div class="d-flex flex-column justify-content-center align-items-center p-5 text-secondary" style="min-height:70vh;">
+                                                            <span style="font-size:4rem;">📎</span>
+                                                            <p class="mt-3">Não é possível visualizar este tipo de arquivo diretamente.</p>
+                                                            <a href="@req.URLAtestado" download class="btn btn-outline-primary mt-2">⬇ Baixar Arquivo</a>
+                                                        </div>
+                                                    }
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <a href="@req.URLAtestado" download class="btn btn-outline-secondary btn-sm">⬇ Baixar</a>
+                                                    <button type="button"
+                                                            class="btn btn-primary btn-sm"
+                                                            data-bs-dismiss="modal"
+                                                            data-bs-toggle="modal"
+                                                            data-bs-target="#modal-detalhes-@req.Id">
+                                                        ← Voltar aos Detalhes
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
                             }
                         }
                         else
                         {
                             <tr>
-                                <td colspan="7" class="text-center text-secondary py-4">
-                                    Nenhum requerimento cadastrado no sistema.
+                                <td colspan="6" class="text-center text-secondary py-4">
+                                    Nenhum requerimento encontrado.
                                 </td>
                             </tr>
                         }
@@ -285,27 +326,25 @@
 
 </div>
 
-@* Modal de Novo Requerimento (para coordenador criar manualmente) *@
+@* Modal de Novo Requerimento — upload de arquivo *@
 <div id="modal-novo-requerimento" class="modal fade" tabindex="-1" aria-labelledby="modal-novo-requerimento-label" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
-
             <div class="modal-header">
                 <h5 class="modal-title fw-semibold" id="modal-novo-requerimento-label">Novo Requerimento de Segunda Chamada</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
             </div>
 
-            <form method="post" action="@Url.Action("Novo", "RequerimentoSegundaChamada")">
+            <form id="form-novo-requerimento" method="post" enctype="multipart/form-data">
                 @Html.AntiForgeryToken()
-
                 <div class="modal-body">
 
                     <div class="mb-3">
                         <label for="matricula-aluno" class="form-label fw-semibold">Matrícula do Aluno <span class="text-danger">*</span></label>
-                        <input type="number" 
-                               id="matricula-aluno" 
+                        <input type="number"
+                               id="matricula-aluno"
                                name="matriculaAluno"
-                               class="form-control" 
+                               class="form-control"
                                placeholder="Digite a matrícula do aluno"
                                required>
                         <small class="text-muted">A matrícula será usada para carregar as matérias do aluno</small>
@@ -313,72 +352,92 @@
 
                     <div class="mb-3">
                         <label for="select-materia" class="form-label fw-semibold">Matéria <span class="text-danger">*</span></label>
-                        <select id="select-materia" 
+                        <select id="select-materia"
                                 name="nomeMateria"
-                                class="form-select" 
+                                class="form-select"
                                 required
                                 disabled>
-                            <option value="" disabled selected>Carregando matérias...</option>
+                            <option value="" disabled selected>Digite a matrícula primeiro...</option>
                         </select>
                     </div>
 
                     <div class="mb-3">
-                        <label for="motivo" class="form-label fw-semibold">Motivo da Ausência <span class="text-danger">*</span></label>
-                        <textarea id="motivo" 
-                                  name="motivo" 
-                                  class="form-control" 
-                                  rows="3" 
+                        <label for="motivo-novo" class="form-label fw-semibold">Motivo da Ausência <span class="text-danger">*</span></label>
+                        <textarea id="motivo-novo"
+                                  name="motivo"
+                                  class="form-control"
+                                  rows="3"
                                   placeholder="Descreva o motivo da ausência"
                                   required></textarea>
                     </div>
 
                     <div class="mb-3">
-                        <label for="tipo-atestado" class="form-label fw-semibold">Tipo de Atestado <span class="text-danger">*</span></label>
-                        <select id="tipo-atestado" 
-                                name="tipoAtestado" 
-                                class="form-select" 
-                                required>
-                            <option value="" disabled selected>Selecione...</option>
-                            <option value="Médico">Médico</option>
-                            <option value="Trabalho">Trabalho</option>
-                            <option value="Óbito">Óbito</option>
-                            <option value="Outro">Outro</option>
-                        </select>
+                        <label class="form-label fw-semibold">Tipo de Atestado <span class="text-danger">*</span></label>
+                        <div class="d-flex flex-wrap gap-3">
+                            <div class="form-check">
+                                <input class="form-check-input"
+                                       type="radio"
+                                       name="tipoAtestado"
+                                       id="tipo-medico-coord"
+                                       value="medico"
+                                       required>
+                                <label class="form-check-label" for="tipo-medico-coord">Médico</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input"
+                                       type="radio"
+                                       name="tipoAtestado"
+                                       id="tipo-trabalho-coord"
+                                       value="trabalho">
+                                <label class="form-check-label" for="tipo-trabalho-coord">Trabalho</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input"
+                                       type="radio"
+                                       name="tipoAtestado"
+                                       id="tipo-obito-coord"
+                                       value="obito">
+                                <label class="form-check-label" for="tipo-obito-coord">Óbito</label>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="mb-3">
-                        <label for="url-atestado" class="form-label fw-semibold">URL do Atestado <span class="text-danger">*</span></label>
-                        <input type="url" 
-                               id="url-atestado" 
-                               name="urlAtestado" 
-                               class="form-control" 
-                               placeholder="https://exemplo.com/atestado"
+                        <label for="arquivo-atestado" class="form-label fw-semibold">Arquivo do Atestado <span class="text-danger">*</span></label>
+                        <input type="file"
+                               id="arquivo-atestado"
+                               name="arquivo"
+                               class="form-control"
+                               accept=".pdf,.jpg,.jpeg,.png"
                                required>
+                        <div class="form-text text-secondary">Formatos aceitos: PDF, JPG, JPEG, PNG. Tamanho máximo: 10 MB.</div>
                     </div>
 
+                    <div id="preview-novo" class="mb-3 d-none"></div>
+                    <div id="alerta-novo" class="alert d-none" role="alert"></div>
+
                 </div>
 
-                <div class="modal-footer">
+                <div class="modal-footer d-flex align-items-center gap-2">
+                    <div class="spinner-border spinner-border-sm text-primary d-none me-auto" id="spinner-novo" role="status" aria-hidden="true"></div>
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Cadastrar Requerimento</button>
+                    <button type="button" id="btn-cadastrar" class="btn btn-primary">Cadastrar Requerimento</button>
                 </div>
-
             </form>
-
         </div>
     </div>
 </div>
 
 @section Scripts {
     <script>
-        // Carregar matérias quando a matrícula mudar
+        // Carregar matérias ao digitar matrícula
         document.getElementById('matricula-aluno').addEventListener('change', async function () {
             const matricula = this.value;
             const selectMateria = document.getElementById('select-materia');
 
             if (!matricula) {
                 selectMateria.disabled = true;
-                selectMateria.innerHTML = '<option value="" disabled selected>Carregando matérias...</option>';
+                selectMateria.innerHTML = '<option value="" disabled selected>Digite a matrícula primeiro...</option>';
                 return;
             }
 
@@ -403,6 +462,91 @@
             } catch (error) {
                 console.error('Erro ao buscar matérias:', error);
                 selectMateria.innerHTML = '<option value="" disabled selected>Erro ao carregar matérias</option>';
+            }
+        });
+
+        // Preview do arquivo
+        document.getElementById('arquivo-atestado').addEventListener('change', function () {
+            const preview = document.getElementById('preview-novo');
+            if (!this.files || this.files.length === 0) {
+                preview.classList.add('d-none');
+                return;
+            }
+            const arquivo = this.files[0];
+            const ext = arquivo.name.split('.').pop().toLowerCase();
+            preview.classList.remove('d-none');
+
+            if (['jpg', 'jpeg', 'png'].includes(ext)) {
+                const url = URL.createObjectURL(arquivo);
+                preview.innerHTML = `<img src="${url}" class="img-thumbnail" style="max-height:150px;" alt="Preview">`;
+            } else {
+                preview.innerHTML = `<div class="d-flex align-items-center gap-2 p-2 border rounded bg-light">
+                    <span style="font-size:2rem;">📄</span>
+                    <span class="small fw-semibold">${arquivo.name}</span>
+                </div>`;
+            }
+        });
+
+        // Envio via fetch com multipart
+        document.getElementById('btn-cadastrar').addEventListener('click', async function () {
+            const form = document.getElementById('form-novo-requerimento');
+            const spinner = document.getElementById('spinner-novo');
+            const alerta = document.getElementById('alerta-novo');
+            const btn = this;
+
+            // Validação básica
+            const matricula = document.getElementById('matricula-aluno').value;
+            const materia = document.getElementById('select-materia').value;
+            const motivo = document.getElementById('motivo-novo').value.trim();
+            const tipo = document.querySelector('input[name="tipoAtestado"]:checked')?.value;
+            const arquivo = document.getElementById('arquivo-atestado').files[0];
+
+            if (!matricula || !materia || !motivo || !tipo || !arquivo) {
+                alerta.className = 'alert alert-danger';
+                alerta.textContent = 'Preencha todos os campos obrigatórios.';
+                return;
+            }
+
+            spinner.classList.remove('d-none');
+            btn.disabled = true;
+            alerta.className = 'alert d-none';
+
+            try {
+                const formData = new FormData();
+                formData.append('matriculaAluno', matricula);
+                formData.append('nomeMateria', materia);
+                formData.append('motivo', motivo);
+                formData.append('tipoAtestado', tipo);
+                formData.append('arquivo', arquivo);
+
+                const csrfToken = form.querySelector('input[name="__RequestVerificationToken"]');
+                if (csrfToken) formData.append('__RequestVerificationToken', csrfToken.value);
+
+                const resposta = await fetch('@Url.Action("CriarParaAluno", "Coordenador")', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const dados = await resposta.json();
+
+                alerta.className = `alert ${dados.sucesso ? 'alert-success' : 'alert-danger'}`;
+                alerta.textContent = dados.mensagem;
+
+                if (dados.sucesso) {
+                    setTimeout(() => {
+                        // Fecha modal e recarrega a página para mostrar o novo requerimento
+                        const modalEl = document.getElementById('modal-novo-requerimento');
+                        const modal = bootstrap.Modal.getInstance(modalEl);
+                        if (modal) modal.hide();
+                        modalEl.addEventListener('hidden.bs.modal', () => location.reload(), { once: true });
+                    }, 1200);
+                }
+            } catch (err) {
+                alerta.className = 'alert alert-danger';
+                alerta.textContent = 'Erro ao enviar. Tente novamente.';
+            } finally {
+                spinner.classList.add('d-none');
+                btn.disabled = false;
             }
         });
     </script>

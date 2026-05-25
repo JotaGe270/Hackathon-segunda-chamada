@@ -27,12 +27,26 @@ namespace Hackathon_segunda_chamada.Services
                 _                      => "Curso não identificado"
             };
 
+            var periodo = usuario.Perfil switch
+            {
+                PerfilUsuario.AlunoEng => "1º Período",
+                PerfilUsuario.AlunoSI  => "2º Período",
+                _                      => "N/A"
+            };
+
+            var turno = usuario.Perfil switch
+            {
+                PerfilUsuario.AlunoEng => "Matutino",
+                PerfilUsuario.AlunoSI  => "Noturno",
+                _                      => "N/A"
+            };
+
             return new DadosAlunoDto(
                 Matricula: usuario.Matricula,
-                NomeCompleto: $"Aluno {usuario.Matricula}",  // placeholder até modelo ter nome
+                NomeCompleto: $"Aluno {usuario.Matricula}",
                 Curso: curso,
-                Periodo: "N/A",   // placeholder
-                Turno: "N/A"      // placeholder
+                Periodo: periodo,
+                Turno: turno
             );
         }
 
@@ -44,7 +58,6 @@ namespace Hackathon_segunda_chamada.Services
             if (usuario == null)
                 return new List<MateriaDto>();
 
-            // Lista estática por curso (hardcoded até tabela de matérias existir)
             return usuario.Perfil switch
             {
                 PerfilUsuario.AlunoEng => new List<MateriaDto>
@@ -69,7 +82,6 @@ namespace Hackathon_segunda_chamada.Services
 
         public async Task<List<RequerimentoResumoDto>> ObterRequerimentos(int matricula)
         {
-            // Ordenado por DataCriacao DESC (Propriedade 10)
             return await _context.RequerimentosSegundaChamada
                 .Where(r => r.MatriculaAluno == matricula)
                 .OrderByDescending(r => r.DataCriacao)
@@ -78,7 +90,8 @@ namespace Hackathon_segunda_chamada.Services
                     r.NomeMateria,
                     r.TipoAtestado,
                     r.Status,
-                    r.DataCriacao))
+                    r.DataCriacao,
+                    r.MotivoRecusa))
                 .ToListAsync();
         }
     }

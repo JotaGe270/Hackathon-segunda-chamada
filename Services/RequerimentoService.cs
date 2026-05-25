@@ -19,19 +19,18 @@ namespace Hackathon_segunda_chamada.Services
 
         public async Task<RequerimentoDetalheDto> CriarRequerimento(CriarRequerimentoDto dto)
         {
-            // Validar tipo de atestado (Requisito 3.6, Propriedade 5)
             if (!_tiposValidos.Contains(dto.TipoAtestado))
                 throw new ArgumentException($"Tipo de atestado inválido: '{dto.TipoAtestado}'. Valores aceitos: medico, trabalho, obito.");
 
             var requerimento = new RequerimentoSegundaChamada
             {
                 MatriculaAluno = dto.MatriculaAluno,
-                NomeMateria = dto.NomeMateria,
-                Motivo = dto.Motivo,
-                TipoAtestado = dto.TipoAtestado,
-                URLAtestado = dto.URLAtestado,
-                Status = "Pendente",
-                DataCriacao = DateTime.UtcNow
+                NomeMateria    = dto.NomeMateria,
+                Motivo         = dto.Motivo,
+                TipoAtestado   = dto.TipoAtestado,
+                URLAtestado    = dto.URLAtestado,
+                Status         = "Pendente",
+                DataCriacao    = DateTime.UtcNow
             };
 
             _context.RequerimentosSegundaChamada.Add(requerimento);
@@ -42,17 +41,13 @@ namespace Hackathon_segunda_chamada.Services
 
         public async Task<RequerimentoDetalheDto?> ObterPorId(int id)
         {
-            // Rejeitar id inválido sem consultar banco (Requisito 6.3)
             if (id <= 0)
                 return null;
 
             var requerimento = await _context.RequerimentosSegundaChamada
                 .FirstOrDefaultAsync(r => r.Id == id);
 
-            if (requerimento == null)
-                return null;
-
-            return MapearParaDetalhe(requerimento);
+            return requerimento == null ? null : MapearParaDetalhe(requerimento);
         }
 
         private static RequerimentoDetalheDto MapearParaDetalhe(RequerimentoSegundaChamada r) =>

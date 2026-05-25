@@ -1,35 +1,44 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Security.Claims;
 using Hackathon_segunda_chamada.Data;
 using Hackathon_segunda_chamada.DTOs;
 using Hackathon_segunda_chamada.Models;
+using Hackathon_segunda_chamada.Services;
 
 namespace Hackathon_segunda_chamada.Controllers
 {
-    // apenas usuários com Perfil "Coordenador" 
     [Authorize(Roles = "Coordenador")]
     public class CoordenadorController : Controller
     {
         private readonly AppDbContext _context;
+        private readonly IArquivoService _arquivoService;
+        private readonly IRequerimentoService _requerimentoService;
 
-        public CoordenadorController(AppDbContext context)
+        public CoordenadorController(
+            AppDbContext context,
+            IArquivoService arquivoService,
+            IRequerimentoService requerimentoService)
         {
             _context = context;
+            _arquivoService = arquivoService;
+            _requerimentoService = requerimentoService;
         }
 
-        // painel com todos os pedidos feitos na faculdade
-        public async Task<IActionResult> Painel()
+        public async Task<IActionResult> Painel(string? status)
         {
-            var requerimentos = await _context.RequerimentosSegundaChamada
+            var query = _context.RequerimentosSegundaChamada.AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(status))
+                query = query.Where(r => r.Status == status);
+
+            var requerimentos = await query
                 .OrderByDescending(r => r.DataCriacao)
                 .ToListAsync();
 
             return View(requerimentos);
         }
 
-        // Action para Aprovar o pedido
         [HttpPost]
         public async Task<IActionResult> Aprovar(int id)
         {
@@ -37,18 +46,16 @@ namespace Hackathon_segunda_chamada.Controllers
             if (req != null)
             {
                 req.Status = "Aprovado";
-                req.MotivoRecusa = null; // Limpa o campo caso tivesse alguma coisa antes
+                req.MotivoRecusa = null;
                 await _context.SaveChangesAsync();
                 TempData["MensagemSucesso"] = "Requerimento aprovado com sucesso!";
             }
             return RedirectToAction("Painel");
         }
 
-        //  Action para Negar o pedido 
         [HttpPost]
         public async Task<IActionResult> Negar(int id, string motivo)
         {
-            // o motivo é obrigatório para recusar um pedido, então verificamos se ele foi fornecido
             if (string.IsNullOrWhiteSpace(motivo))
             {
                 TempData["MensagemErro"] = "É obrigatório fornecer uma justificativa para recusar o requerimento.";
@@ -59,7 +66,7 @@ namespace Hackathon_segunda_chamada.Controllers
             if (req != null)
             {
                 req.Status = "Negado";
-                req.MotivoRecusa = motivo; // Grava o motivo obrigatório
+                req.MotivoRecusa = motivo;
                 await _context.SaveChangesAsync();
                 TempData["MensagemSucesso"] = "Requerimento recusado com sucesso.";
             }
@@ -67,51 +74,60 @@ namespace Hackathon_segunda_chamada.Controllers
             return RedirectToAction("Painel");
         }
 
-        // Perfil do Coordenador
-        public async Task<IActionResult> Perfil()
+        [HttpPost]
+        public async Task<IActionResult> CriarParaAluno(
+            int matriculaAluno,
+            string nomeMateria,
+            string motivo,
+            string tipoAtestado,
+            IFormFile arquivo)
         {
-            var matriculaLogada = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name)?.Value;
-            if (matriculaLogada == null || !int.TryParse(matriculaLogada, out var matricula))
-                return RedirectToAction("Login", "Account");
+            if (matriculaAluno <= 0)
+                return Json(new { sucesso = false, mensagem = "Informe uma matrícula válida." });
 
-            var usuario = await _context.Usuarios.FirstOrDefaultAsync(u => u.Matricula == matricula);
-            if (usuario == null)
-                return RedirectToAction("Login", "Account");
+            if (string.IsNullOrWhiteSpace(nomeMateria))
+                return Json(new { sucesso = false, mensagem = "Selecione uma matéria." });
 
-            // Estatísticas dos requerimentos
-            var totalPendentes = await _context.RequerimentosSegundaChamada
-                .CountAsync(r => r.Status == "Pendente");
+            if (string.IsNullOrWhiteSpace(motivo))
+                return Json(new { sucesso = false, mensagem = "O motivo é obrigatório." });
 
-            var totalAprovados = await _context.RequerimentosSegundaChamada
-                .CountAsync(r => r.Status == "Aprovado");
+            if (string.IsNullOrWhiteSpace(tipoAtestado))
+                return Json(new { sucesso = false, mensagem = "Selecione o tipo de atestado." });
 
-            var totalNegados = await _context.RequerimentosSegundaChamada
-                .CountAsync(r => r.Status == "Negado");
+            if (arquivo == null || arquivo.Length == 0)
+                return Json(new { sucesso = false, mensagem = "Anexe o arquivo do atestado." });
 
-            // Requerimentos recentes (últimos 5)
-            var requerimentosRecentes = await _context.RequerimentosSegundaChamada
-                .OrderByDescending(r => r.DataCriacao)
-                .Take(5)
-                .Select(r => new RequerimentoResumoDto(
-                    r.Id,
-                    r.NomeMateria,
-                    r.TipoAtestado,
-                    r.Status,
-                    r.DataCriacao
-                ))
-                .ToListAsync();
+            var aluno = await _context.Usuarios.FirstOrDefaultAsync(u => u.Matricula == matriculaAluno);
+            if (aluno == null)
+                return Json(new { sucesso = false, mensagem = "Aluno não encontrado no sistema." });
 
-            var perfil = new PerfilCoordenadorDto(
-                usuario.Matricula,
-                $"Coordenador #{usuario.Matricula}",
-                "Coordenação Acadêmica",
-                totalPendentes,
-                totalAprovados,
-                totalNegados,
-                requerimentosRecentes
-            );
+            if (aluno.Perfil != PerfilUsuario.AlunoEng && aluno.Perfil != PerfilUsuario.AlunoSI)
+                return Json(new { sucesso = false, mensagem = "A matrícula informada não pertence a um aluno." });
 
-            return View(perfil);
+            try
+            {
+                var urlAtestado = await _arquivoService.SalvarArquivo(arquivo);
+
+                var dto = new CriarRequerimentoDto(
+                    MatriculaAluno: matriculaAluno,
+                    NomeMateria: nomeMateria,
+                    Motivo: motivo,
+                    TipoAtestado: tipoAtestado,
+                    URLAtestado: urlAtestado
+                );
+
+                await _requerimentoService.CriarRequerimento(dto);
+
+                return Json(new { sucesso = true, mensagem = "Requerimento cadastrado com sucesso!" });
+            }
+            catch (ArgumentException ex)
+            {
+                return Json(new { sucesso = false, mensagem = ex.Message });
+            }
+            catch (Exception)
+            {
+                return Json(new { sucesso = false, mensagem = "Erro interno ao salvar. Tente novamente." });
+            }
         }
     }
 }

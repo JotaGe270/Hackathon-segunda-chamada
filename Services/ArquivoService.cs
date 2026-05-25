@@ -15,6 +15,7 @@ namespace Hackathon_segunda_chamada.Services
             {
                 "application/pdf",
                 "image/jpeg",
+                "image/jpg",
                 "image/png"
             };
 
@@ -40,11 +41,9 @@ namespace Hackathon_segunda_chamada.Services
             if (!_mimeTypesPermitidos.Contains(arquivo.ContentType))
                 throw new ArgumentException("Tipo de arquivo não permitido.");
 
-            // Gerar nome seguro com GUID — nunca usar nome original (Requisito 4.2, 8.4)
             var nomeArquivo = $"{Guid.NewGuid()}{extensao.ToLowerInvariant()}";
             var pastaUploads = Path.Combine(_env.WebRootPath, "uploads");
 
-            // Garantir que a pasta existe
             Directory.CreateDirectory(pastaUploads);
 
             var caminhoCompleto = Path.Combine(pastaUploads, nomeArquivo);

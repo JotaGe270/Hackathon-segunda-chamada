@@ -85,6 +85,16 @@
         border-color: var(--color-primary-light);
         box-shadow: 0 0 0 0.2rem rgba(46, 95, 163, 0.2);
     }
+
+    /* Remove as setas do input number em todos os browsers */
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+    input[type=number] {
+        -moz-appearance: textfield;
+    }
 </style>
 
 <div class="login-wrapper">
@@ -93,15 +103,9 @@
         <img src="~/images/logo.png"
              alt="Segunda Chamada"
              class="login-logo"
-             onerror="this.style.display='none'; document.getElementById('logo-placeholder').style.display='block';" />
+             onerror="this.style.display='none';" />
 
-        <div id="logo-placeholder"
-             class="text-center mb-3"
-             style="display:none; font-size:0.85rem; color:var(--color-text-secondary); font-weight:600;">
-            Segunda Chamada
-        </div>
-
-        <h1 class="login-title">Segunda Chamada Acadêmica</h1>
+        <h1 class="login-title">Segunda Chamada</h1>
 
         @if (!ViewData.ModelState.IsValid)
         {

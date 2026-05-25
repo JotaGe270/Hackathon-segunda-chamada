@@ -68,10 +68,19 @@ function renderizarLinhaRequerimento(requerimento) {
     const tipoFormatado = formatarTipoAtestado(requerimento.tipoAtestado);
     const dataFormatada = formatarData(requerimento.dataCriacao);
 
+    const linhaRecusa = requerimento.status === 'Negado' && requerimento.motivoRecusa
+        ? `<tr class="table-danger">
+               <td colspan="4" class="ps-4 py-2">
+                   <span class="fw-semibold text-danger small">✕ Motivo da recusa:</span>
+                   <span class="text-danger small ms-1">${escapeHtml(requerimento.motivoRecusa)}</span>
+               </td>
+           </tr>`
+        : '';
+
     return `
         <tr>
             <td>${escapeHtml(requerimento.nomeMateria)}</td>
-            <td>${escapeHtml(tipoFormatado)}</td>
+            <td><span class="badge bg-info text-white">${escapeHtml(tipoFormatado)}</span></td>
             <td>
                 <span class="badge bg-${classeStatus} text-${classeStatus === 'warning' ? 'dark' : 'white'}">
                     ${escapeHtml(requerimento.status)}
@@ -79,6 +88,7 @@ function renderizarLinhaRequerimento(requerimento) {
             </td>
             <td>${dataFormatada}</td>
         </tr>
+        ${linhaRecusa}
     `.trim();
 }
 
@@ -166,7 +176,7 @@ async function carregarMaterias() {
         // Opção padrão + opções de matéria
         const opcaoPadrao = '<option value="" disabled selected>Selecione uma matéria...</option>';
         const opcoesMaterias = (materias || [])
-            .map(m => `<option value="${escapeHtml(m.codigo)}">${escapeHtml(m.nome)}</option>`)
+            .map(m => `<option value="${escapeHtml(m.nome)}">${escapeHtml(m.nome)}</option>`)
             .join('');
 
         select.innerHTML = opcaoPadrao + opcoesMaterias;
@@ -199,13 +209,14 @@ function abrirModalSolicitacao() {
 }
 
 /**
- * Fecha o modal de solicitação e limpa todos os campos do formulário.
+ * Fecha o modal de solicitação.
+ * A limpeza do formulário é feita pelo listener hidden.bs.modal,
+ * garantindo que só ocorre após a animação de fechamento terminar.
  */
 function fecharModalSolicitacao() {
     if (_modalInstance) {
         _modalInstance.hide();
     }
-    limparFormulario();
 }
 
 /**
@@ -404,18 +415,27 @@ function exibirResultado(sucesso, mensagem) {
 /**
  * Submete o formulário de solicitação via fetch (multipart/form-data).
  * Inclui token CSRF, exibe spinner, desabilita botão e trata resposta.
+ * Flag _enviando impede duplo envio mesmo com cliques rápidos.
  * @param {Event} evento
  * @returns {Promise<void>}
  */
+let _enviando = false;
+
 async function submeterSolicitacao(evento) {
     evento.preventDefault();
 
-    if (!validarFormulario()) return;
+    // Bloqueia imediatamente — qualquer clique subsequente é ignorado
+    if (_enviando) return;
+    _enviando = true;
+
+    if (!validarFormulario()) {
+        _enviando = false;
+        return;
+    }
 
     const spinner = document.getElementById('spinner-envio');
     const btnEnviar = document.getElementById('btn-enviar');
 
-    // Exibir spinner e desabilitar botão
     if (spinner) spinner.classList.remove('d-none');
     if (btnEnviar) btnEnviar.disabled = true;
 
@@ -427,7 +447,7 @@ async function submeterSolicitacao(evento) {
         const csrfToken = document.querySelector('input[name="__RequestVerificationToken"]');
 
         const formData = new FormData();
-        formData.append('nomeMateria', select ? select.options[select.selectedIndex].text : '');
+        formData.append('nomeMateria', select ? select.value : '');
         formData.append('motivo', motivo ? motivo.value : '');
         formData.append('tipoAtestado', tipoAtestado ? tipoAtestado.value : '');
         if (arquivo && arquivo.files.length > 0) {
@@ -447,7 +467,6 @@ async function submeterSolicitacao(evento) {
         exibirResultado(dados.sucesso, dados.mensagem);
 
         if (dados.sucesso) {
-            // Atualizar tabela e fechar modal após 1500ms
             await carregarRequerimentos();
             setTimeout(() => {
                 fecharModalSolicitacao();
@@ -457,9 +476,12 @@ async function submeterSolicitacao(evento) {
         console.error('Erro ao submeter solicitação:', erro);
         exibirResultado(false, 'Ocorreu um erro ao enviar a solicitação. Tente novamente.');
     } finally {
-        // Sempre ocultar spinner e reabilitar botão
         if (spinner) spinner.classList.add('d-none');
         if (btnEnviar) btnEnviar.disabled = false;
+        // Só libera o envio novamente se houve erro (sucesso fecha o modal e reseta via hidden.bs.modal)
+        if (!document.getElementById('alerta-resultado')?.classList.contains('alert-success')) {
+            _enviando = false;
+        }
     }
 }
 
@@ -509,7 +531,15 @@ async function inicializarDashboard() {
     // Evento hidden.bs.modal → limpar formulário ao fechar o modal por qualquer meio
     const modalEl = document.getElementById('modal-solicitacao');
     if (modalEl) {
-        modalEl.addEventListener('hidden.bs.modal', limparFormulario);
+        modalEl.addEventListener('hidden.bs.modal', () => {
+            limparFormulario();
+            _enviando = false;
+            // Garante que o backdrop e o scroll do body são restaurados
+            document.body.classList.remove('modal-open');
+            document.body.style.removeProperty('overflow');
+            document.body.style.removeProperty('padding-right');
+            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+        });
     }
 }
 

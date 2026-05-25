@@ -16,7 +16,6 @@ namespace Hackathon_segunda_chamada.Controllers
             _alunoService = alunoService;
         }
 
-        // GET /Aluno/Dashboard
         [HttpGet("Dashboard")]
         public async Task<IActionResult> Dashboard()
         {
@@ -28,7 +27,6 @@ namespace Hackathon_segunda_chamada.Controllers
             return View(dados);
         }
 
-        // GET /aluno/materias
         [HttpGet("materias")]
         public async Task<IActionResult> ObterMaterias()
         {
@@ -40,7 +38,6 @@ namespace Hackathon_segunda_chamada.Controllers
             return Json(materias);
         }
 
-        // GET /aluno/requerimentos
         [HttpGet("requerimentos")]
         public async Task<IActionResult> ObterRequerimentos()
         {

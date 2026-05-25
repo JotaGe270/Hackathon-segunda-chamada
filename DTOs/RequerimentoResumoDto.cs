@@ -5,6 +5,7 @@ namespace Hackathon_segunda_chamada.DTOs
         string NomeMateria,
         string TipoAtestado,
         string Status,
-        DateTime DataCriacao
+        DateTime DataCriacao,
+        string? MotivoRecusa = null
     );
 }

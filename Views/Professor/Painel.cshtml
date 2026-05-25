@@ -1,0 +1,153 @@
+@model Hackathon_segunda_chamada.DTOs.PainelProfessorDto
+
+@{
+    ViewData["Title"] = "Painel do Professor";
+    Layout = "_Layout";
+}
+
+@await Html.PartialAsync("_NavbarProfessor")
+
+<div class="container-fluid py-4">
+
+    @* Cabeçalho *@
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-0">Alunos com Segunda Chamada Aprovada</h2>
+            <p class="text-muted small mb-0">Apenas requerimentos aprovados pelo coordenador são exibidos aqui.</p>
+        </div>
+    </div>
+
+    @* Cards de resumo *@
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-md-3">
+            <div class="card shadow-sm border-0 h-100" style="border-left: 4px solid #1A3A6B !important;">
+                <div class="card-body">
+                    <p class="text-secondary small fw-semibold mb-1">Alunos ENG aprovados</p>
+                    <h3 class="fw-bold mb-0">@Model.AlunosEng.Count</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-md-3">
+            <div class="card shadow-sm border-0 h-100" style="border-left: 4px solid #2E5FA3 !important;">
+                <div class="card-body">
+                    <p class="text-secondary small fw-semibold mb-1">Alunos SI aprovados</p>
+                    <h3 class="fw-bold mb-0">@Model.AlunosSI.Count</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @* Abas ENG / SI *@
+    <ul class="nav nav-tabs mb-0" id="tabCursos" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active fw-semibold" id="tab-eng" data-bs-toggle="tab" data-bs-target="#painel-eng"
+                    type="button" role="tab" aria-controls="painel-eng" aria-selected="true">
+                🏗️ Engenharia
+                <span class="badge bg-primary ms-1">@Model.AlunosEng.Count</span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link fw-semibold" id="tab-si" data-bs-toggle="tab" data-bs-target="#painel-si"
+                    type="button" role="tab" aria-controls="painel-si" aria-selected="false">
+                💻 Sistemas de Informação
+                <span class="badge bg-primary ms-1">@Model.AlunosSI.Count</span>
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="tabCursosContent">
+
+        @* --- ABA ENGENHARIA --- *@
+        <div class="tab-pane fade show active" id="painel-eng" role="tabpanel" aria-labelledby="tab-eng">
+            <div class="card shadow-sm border-top-0 rounded-0 rounded-bottom">
+                <div class="card-body">
+                    @if (Model.AlunosEng.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th scope="col">Matrícula</th>
+                                        <th scope="col">Matéria</th>
+                                        <th scope="col">Tipo de Atestado</th>
+                                        <th scope="col">Data de Aprovação</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var aluno in Model.AlunosEng)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <span class="fw-semibold">@aluno.Matricula</span>
+                                            </td>
+                                            <td>@aluno.NomeMateria</td>
+                                            <td>
+                                                <span class="badge bg-info text-white">@aluno.TipoAtestado</span>
+                                            </td>
+                                            <td>
+                                                <small class="text-muted">@aluno.DataAprovacao.ToString("dd/MM/yyyy HH:mm")</small>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center text-secondary py-5">
+                            <p class="mb-0 fs-5">Nenhum aluno de Engenharia com segunda chamada aprovada.</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        @* --- ABA SISTEMAS DE INFORMAÇÃO --- *@
+        <div class="tab-pane fade" id="painel-si" role="tabpanel" aria-labelledby="tab-si">
+            <div class="card shadow-sm border-top-0 rounded-0 rounded-bottom">
+                <div class="card-body">
+                    @if (Model.AlunosSI.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th scope="col">Matrícula</th>
+                                        <th scope="col">Matéria</th>
+                                        <th scope="col">Tipo de Atestado</th>
+                                        <th scope="col">Data de Aprovação</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var aluno in Model.AlunosSI)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <span class="fw-semibold">@aluno.Matricula</span>
+                                            </td>
+                                            <td>@aluno.NomeMateria</td>
+                                            <td>
+                                                <span class="badge bg-info text-white">@aluno.TipoAtestado</span>
+                                            </td>
+                                            <td>
+                                                <small class="text-muted">@aluno.DataAprovacao.ToString("dd/MM/yyyy HH:mm")</small>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center text-secondary py-5">
+                            <p class="mb-0 fs-5">Nenhum aluno de SI com segunda chamada aprovada.</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
